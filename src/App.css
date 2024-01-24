@@ -36,3 +36,11 @@
     transform: rotate(360deg);
   }
 }
+
+/* Add this CSS to your styles */
+.delete-icon:hover {
+  color: red; /* Change the color as per your design */
+  transform: scale(1.2); /* Increase the size on hover */
+  transition: color 0.3s, transform 0.3s; /* Add smooth transition */
+}
+

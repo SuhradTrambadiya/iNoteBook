@@ -1,0 +1,121 @@
+const express = require('express');
+const router = express.Router();
+const fetchuser = require('../middlewares/fetchuser');
+const Note = require('../models/Note');
+const { body, validationResult } = require('express-validator');
+
+// ROUTE 1: Get All the Notes using: GET "/api/auth/getuser". Login required
+router.get('/fetchallnotes', fetchuser, async (req, res) => {
+    try {
+        const notes = await Note.find({ user: req.user.id });
+        res.json(notes)
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send("Internal Server Error");
+    }
+})
+
+// ROUTE 2: Add a new Note using: POST "/api/auth/addnote". Login required
+router.post('/addnote', fetchuser, [
+    body('title', 'Enter a valid title').isLength({ min: 3 }),
+    body('description', 'Description must be atleast 5 characters').isLength({ min: 5 }),], async (req, res) => {
+        try {
+
+            const { title, description, tag } = req.body;
+
+            // If there are errors, return Bad request and the errors
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ errors: errors.array() });
+            }
+            const note = new Note({
+                title, description, tag, user: req.user.id
+            })
+            const savedNote = await note.save()
+
+            res.json(savedNote)
+
+        } catch (error) {
+            console.error(error.message);
+            res.status(500).send("Internal Server Error");
+        }
+    })
+
+
+// ROUTE 3: UPDATE  Note BY ID  using: POST "/api/auth/update/:id". Login required
+router.put(
+    '/updatenote/:id',
+    fetchuser,
+    [
+      body('title', 'Enter a valid title').isLength({ min: 3 }),
+      body('description', 'Description must be at least 5 characters').isLength({ min: 5 }),
+    ],
+    async (req, res) => {
+      try {
+        const noteId = req.params.id;
+        const { title, description, tag } = req.body;
+  
+        // Check if the note exists
+        const existingNote = await Note.findById(noteId);
+        if (!existingNote) {
+          return res.status(404).json({ message: 'Note not found' });
+        }
+  
+        // Check if the user making the request is the owner of the note
+        if (existingNote.user.toString() !== req.user.id) {
+          return res.status(403).json({ message: 'Unauthorized. You are not the owner of this note.' });
+        }
+  
+        // Validate input data
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+          return res.status(400).json({ errors: errors.array() });
+        }
+  
+        // Update only allowed fields
+        existingNote.title = title;
+        existingNote.description = description;
+        existingNote.tag = tag;
+  
+        // Save the updated note
+        const updatedNote = await existingNote.save();
+  
+        res.json(updatedNote);
+      } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Internal Server Error');
+      }
+    }
+  );
+
+
+// ROUTE 4: DELETE A NOTE BY ID: DELETE "/api/notes/deletenote/:id" LOGIN REQUIRED
+router.delete('/deletenote/:id', fetchuser, async (req, res) => {
+    try {
+      const noteId = req.params.id;
+  
+      // Check if the note exists
+      const existingNote = await Note.findById(noteId);
+      if (!existingNote) {
+        return res.status(404).json({ message: 'Note not found' });
+      }
+  
+      // Check if the user making the request is the owner of the note
+      if (existingNote.user.toString() !== req.user.id) {
+        return res.status(403).json({ message: 'Unauthorized. You are not the owner of this note.' });
+      }
+  
+      // Delete the note using deleteOne
+      await Note.deleteOne({ _id: noteId });
+  
+      res.json({ message: 'Note deleted successfully' });
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+  
+  
+
+
+module.exports = router

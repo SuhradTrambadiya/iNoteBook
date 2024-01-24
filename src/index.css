@@ -11,3 +11,18 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Add this CSS to your styles */
+.edit-icon:hover {
+  color: blue; /* Change the color as per your design */
+  background-color: #d6e4f0; /* Change the background color as per your design */
+  transform: scale(1.2); /* Increase the size on hover */
+  transition: color 0.3s, background-color 0.3s, transform 0.3s; /* Add smooth transition */
+}
+
+.delete-icon:hover {
+  color: red; /* Change the color as per your design */
+  background-color: #f8d7da; /* Change the background color as per your design */
+  transform: scale(1.2); /* Increase the size on hover */
+  transition: color 0.3s, background-color 0.3s, transform 0.3s; /* Add smooth transition */
+}
